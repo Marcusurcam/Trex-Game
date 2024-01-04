@@ -8,7 +8,7 @@ var ground, invisibleGround, ground_image;
 var cloud, cloudsGroup, cloudImage;
 var obstacleGroup, obstacle1, obstacle2, obstacle3, obstacle4, obcstacle5, obstacle6;
 var gravity, vspawnObstacle, vspawnClouds;
-var score, GameState;
+var score, GameState, Health;
 var sleighGroup;
 function preload () {
   trex_running = loadAnimation("trex1.png","trex3.png", "trex4.png");
@@ -35,6 +35,7 @@ function setup(){
   trex.scale = 0.5;
   vspawnObstacle = 50;
   vspawnClouds = 120;
+  Health = 3.5;
   
   gravity = 0.75;
 
@@ -70,20 +71,22 @@ function setup(){
 function draw(){
   background("#00A2E8");
   text("Score: "+ score, 500,50);
+  text("Health: " + Health, 400, 50)
   
   
   if (GameState===PLAY){
-    ground.velocityX = -(6 + floor(score/20));
+    ground.velocityX = -(6 + floor(score/10));
   
     if(keyDown("space") && trex.y >= 159) {
-      trex.velocityY = -12;
+      trex.velocityY = -4*Math.sqrt(Health*3);
     }
   
     trex.velocityY = trex.velocityY + gravity;
   
     if (ground.x < 0){
       ground.x = ground.width/2;
-      gravity = gravity + random(-0.05,0.05);
+      gravity = gravity + random(-0.1,0.1);
+      Health = Health + score/500;
     }
   
     trex.collide(invisibleGround);
@@ -91,13 +94,16 @@ function draw(){
     spawnObstacles();
     spawnSleigh();
     if(obstaclesGroup.isTouching(trex)){
+       Health = round((Health - 0.05)*1000)/1000;
+    }
+    if(Health <= 0){
        GameState = END;
     }
-    
   }
   else if (GameState === END) {
     gameOver.visible = true;
     restart.visible = true;
+
     //set velcity of each game object to 0
     ground.velocityX = 0;
     trex.velocityY = 0;
@@ -125,7 +131,7 @@ function draw(){
   if (frameCount % vspawnObstacle === 0){
     var obstacle = createSprite(650,175,10,40);
     vspawnObstacle = vspawnObstacle + round(random(-1.5,1.5))
-    obstacle.velocityX =  -(6 + floor(score/30));
+    obstacle.velocityX =  -(6 + floor(score/10));
     var rand = Math.round(random(1,6));
     switch(rand) {
       case 1: obstacle.addImage(obstacle1);
@@ -146,6 +152,7 @@ function draw(){
     obstacle.scale = random(0.5,0.8);
     obstacle.lifetime = 500;
     obstaclesGroup.add(obstacle)
+    score = score+1;
   }
  }
 
@@ -155,7 +162,7 @@ function draw(){
     cloud.y = Math.round(random(10,30));
     cloud.addImage(cloudImage);
     cloud.scale = random(0.35,0.65);
-    cloud.velocityX = -3;
+    cloud.velocityX = -(3+floor(score/30));
     vspawnClouds = vspawnClouds+round(random(-2,2));
 
       cloud.lifetime = 200;
@@ -196,5 +203,6 @@ function reset(){
   trex.changeAnimation("running",trex_running);
   
   score = 0;
+  Health = 3;
   
 }
